@@ -16,6 +16,13 @@ jobs:
       # копируем репозиторий (код) на раннер (виртуальную машину гита)
       - uses: actions/checkout@v2
       # называем шаг
+      - name: Install Docker Compose
+        run: |
+        sudo apt-get update 
+        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+      - name: Check Docker Compose version
+        run: docker-compose --version
       - name: Rin UI-tests via docker-compose
         # подтягиваем секреты
         env:
