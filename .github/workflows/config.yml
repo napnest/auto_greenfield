@@ -1,0 +1,40 @@
+# имя общих тестов
+name: UI Tests
+
+# на что реагирует, по какому триггеру будут запускаться тесты
+# когда мы пушим - тесты запускаются
+on: [push]
+
+# тоже самое, что и сервисы
+jobs:
+  ui-tests:
+    # на какой виртуальной машине будем запускать тесты
+    runs-on: ubuntu-latest
+
+    # записываем шаги запуска
+    steps:
+      # копируем репозиторий (код) на раннер (виртуальную машину гита)
+      - uses: actions/checkout@v2
+      # называем шаг
+      - name: Rin UI-tests via docker-compose
+        # подтягиваем секреты
+        env:
+          LOGIN: ${{ secrets.LOGIN }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+        # запускаем команду
+        # если тест упадет, то работа продолжится и сформируется отчет
+        run: |
+          docker-compose up --exit-code-from regression || true
+      # генерация отчета
+      - name: Generate Allure report
+        # заходим внутрь контейнера, где проходили тесты и размещаем отчет в гит actions
+        run: |
+          sudo docker-compose run regression /bin/sh -c "allure generate allure-results --clean -o allure-report"
+      # разворачиваем отчет на GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          token: ${{ secrets.CI_TOKEN }}
+          branch: gh-pages
+          folder: allure-report
+          clean: true
